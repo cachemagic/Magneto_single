@@ -23,13 +23,10 @@ unsigned short g_uSampleCount;
 unsigned char g_aDataBuffer[SERIAL_BUFFER_SIZE];	// General purpose buffer - do not use in interrupt
 unsigned short g_aCoagualationSetPoints[6][3] = { 412, 391, 433,		// AP1	Nominal Resistance (ohms)	Min Resistance (ohms)	Max Resistance (ohms)
 																576, 547, 605,			// SP3	
-//																750, 713, 788,			// SP4   // Original values
-																750, 735, 765,			// SP4   // New values on 11/6/2013
+																750, 735, 765,			// SP4 Updated 11/13/2013
 																1050, 998, 1103,		// SP5
-                                                200, 190, 210,			// SP6
-//																909, 864, 954 };		// SP7   // Original values
-																905, 887, 923 };		// SP7   // New values on 11/6/2013
-
+																200, 190, 210,			// SP6
+																905, 887, 923 };		// SP7 Updated 11/13/2013
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -78,7 +75,7 @@ __interrupt void ADC10_ISR(void)
 	case  8: break;                          // ADC10LO
 	case 10: break;                          // ADC10IN
 	case 12:
-		if ( (ADC10MCTL0 & 0x0F) == ADC10INCH_1 )    //!(g_ADCFlags & ADCFLG_CHANNEL1) )
+		if ( (ADC10MCTL0 & 0x0F) == ADC10INCH_1 )//!(g_ADCFlags & ADCFLG_CHANNEL1) )
 		{
 			g_ADCCurrent = ADC10MEM0;  
 			if (g_ADCCurrent > 0x3F8) 

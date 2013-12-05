@@ -64,11 +64,7 @@ extern PACKET		g_tDUTPacket;
 // Export Functions
 void InitUART(void);
 
-void OutNum(char n);
-void PrintLn(unsigned char* pData);
-void Print(unsigned char* pData);
 void TransmitUART( unsigned char ucBytes, unsigned char* pData );
-void delTransmitUART( unsigned char ucBytes, unsigned char* pData );
 unsigned char GetUARTReceived( unsigned char* pBuffer );  		// user must make sure that pBuffer is at least SERIAL_BUFFER_SIZE
 
 

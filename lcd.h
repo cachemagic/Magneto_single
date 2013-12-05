@@ -42,12 +42,13 @@
 void PulseLcd();
 //void SendByte(char ByteToSend, int IsData);
 void LcdSetCursorPosition(char Row, char Col);
-void ClearLcdScreen(); 
+void ClearLcdScreen(unsigned char); 
 void InitializeLcd(void);
 void DisplayChar(char cChar);
 void DisplayString(char *Text);
 void DisplayDecimal(unsigned short uNumber);
 void DisplayHex(unsigned short uNumber);
-void RefreshLCD(void); 
+void RefreshLCD(unsigned char); 
+void DebugLCD(char *Text, unsigned short uNumber);
 
 #endif /* LCD_H_ */

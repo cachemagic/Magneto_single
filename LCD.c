@@ -167,13 +167,22 @@ void LcdSetCursorPosition(char Row, char Col)
 // 
 // Return    void.
 //------------------------------------------------------------------------------
-void ClearLcdScreen()
+void ClearLcdScreen(unsigned char debug)
 {
     //
     // Clear display, return home
     //
+  if (!debug){
     SendByte(0x01, FALSE);
     SendByte(0x02, FALSE);
+  }
+  else{
+    return;
+    LcdSetCursorPosition( 1, 0 );
+    DisplayString("                ");
+  }
+
+  
 }
  
 
@@ -246,23 +255,25 @@ void InitializeLcd(void)
 ////////////////////////////////////////////////////////////////////////////////
 //  Refresh LCD to clear garbled display
 //------------------------------------------------------------------------------
-void RefreshLCD(void)
+void RefreshLCD(unsigned char debug)
 {
-    //
-    // set 4-bit input - second time. 
-    // (as reqd by the spec.)
-    // 
-    SendByte(0x28, FALSE);
+    if (!debug){
+      //
+      // set 4-bit input - second time. 
+      // (as reqd by the spec.)
+      // 
+      SendByte(0x28, FALSE);
  
-    //
-    // 2. Display on, cursor off, blink cursor
-    //
-    SendByte(0x0C, FALSE);
+      //
+      // 2. Display on, cursor off, blink cursor
+      //
+      SendByte(0x0C, FALSE);
   
-    // 
-    // 3. Cursor move auto-increment
-    //
-    SendByte(0x06, FALSE);
+      // 
+      // 3. Cursor move auto-increment
+      //
+      SendByte(0x06, FALSE);
+    }
 }
 
 
@@ -288,13 +299,14 @@ void DisplayChar(char cChar)
 void DisplayString(char *Text)
 {
     char *c;
-
+    
     c = Text;
     while ((c != 0) && (*c != 0)) 
     {
-        SendByte(*c, TRUE);
-        c++;
+       SendByte(*c, TRUE);
+       c++;
     }
+    
 }
  
 
@@ -359,8 +371,16 @@ void DisplayHex( unsigned short uNumber )
 	DisplayChar( ucChar );
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+//  Display Debug Messages on 1st line of LCD
+//  A string and value
+//------------------------------------------------------------------------------
+void DebugLCD(char *Text, unsigned short uNumber)
+{
+  LcdSetCursorPosition( 0, 0 );
+  DisplayString(Text);
+  DisplayDecimal(uNumber);
+}
 
 
 

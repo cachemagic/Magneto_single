@@ -34,21 +34,23 @@
 #include "lcd.h"				// Interface to LCD display
 
 #define FIXTURE_TYPE			0x21		// Magneto Fixture
-#define FIRMWARE_VERSION	0x01		// Version 1
-#define FIRMWARE_REV			0x04
+#define FIRMWARE_VERSION	0x02		// Version 2 by Russell Anderson
+#define FIRMWARE_REV			0x01
 
 ////////////////////////////////////////////////////////////////////////////////
 //  GLOBAL VARIABLES AND DEFINES
 unsigned short g_uRunFlags;
- #define RFLG_CABLE_DETECTED					BIT1
- #define RFLG_START_BUTTON_PRESSED			BIT2
- #define RFLG_PROCESS_START_BUTTON			BIT3
- #define RFLG_STATE_PULSE_LOW					BIT4
- #define RFLG_BUTTON_INITIATED				BIT5
- #define RFLG_DISPLAY_RESULTS					BIT6
- #define RFLG_CALIBRATE_CURRENT				BIT7
- #define RFLG_PC_CONNECTED						BIT8
- #define RFLG_LEMO_POWER						BIT9
+#define RFLG_CABLE_DETECTED				BIT1
+#define RFLG_START_BUTTON_PRESSED		BIT2
+#define RFLG_PROCESS_START_BUTTON		BIT3
+#define RFLG_STATE_PULSE_LOW				BIT4
+#define RFLG_BUTTON_INITIATED				BIT5
+#define RFLG_DISPLAY_RESULTS				BIT6
+#define RFLG_CALIBRATE_CURRENT			BIT7
+#define RFLG_PC_CONNECTED					BIT8
+#define RFLG_LEMO_POWER						BIT9
+#define RFLG_DEBUG                     BITA
+#define RFLG_PRODUCTION                BITB
 
 #define FRAM_DATA_ADDRESS						0x1800	// Store persitent data in 256 byte information memory 0x1800 to 0x18FF also 0x1900 to 0x19FF
 unsigned short g_uPassCount;					// Number of perfomed tests that have passed
@@ -69,6 +71,10 @@ unsigned long g_ulMaxVoltage;
 unsigned short g_uMaxVoltageCount;
 unsigned long g_ulMinVoltage;
 unsigned short g_uMinVoltageCount;
+unsigned long g_ulHMaxVoltage;
+unsigned long g_uHMaxVoltageCount;
+unsigned short g_uHActiveVoltage;					// Voltage while Mosfet Pulsed (High Voltage)
+
 
 unsigned char g_ucErrorBlinkCount;					// Sets blink rate of led
 unsigned char g_ucLivesUsed;							// Number of lives used determined from pulses
@@ -94,7 +100,7 @@ void ProcessLCD(void);
 
 void ExecuteMagnetoTest(void);							// Runs the Magneto test.
 unsigned char CountLivesUsed(void);						// Determines the number of lives used by magneto, also records quiescent current.
-void PulseDevicePower(unsigned short uSeconds );	// Pulses DUT power for uSeconds.
+void PulseDevicePower(unsigned short uSeconds );	// Pulses DUT power at ucAddress for uSeconds.
 void CalibrateCurrentSensor(void);						// Calculates the value for g_uResGain with precision resistor.
 void ProcessUARTPacket(void);
 void CalculateCurrent( void );
@@ -123,13 +129,13 @@ void DisplaySetPoint(void);
 ////////////////////////////////////////////////////////////////////////////////
 void main(void)
 {
-
 	WDTCTL = WDTPW + WDTHOLD;					// Stop WDT
 	
 	Initialize();
 	SET_DEVICE_POWER( OFF );					// Turn off device power
 
 	g_uRunFlags = 0x00;							// Reset state machine
+//   g_uRunFlags |= RFLG_DEBUG;     // Debug Mode uses first line of LCD
 	g_ucErrorBlinkCount = 1;	
 	g_uLEDCount = 1;
 	g_uLCDCount = 1;
@@ -137,21 +143,12 @@ void main(void)
 	delay_ms( 100 );
 	
 	InitializeLcd();
-	ClearLcdScreen(); 
+	ClearLcdScreen(g_uRunFlags & RFLG_DEBUG ); 
 	
 	ReadFRAMData();								// Load FRAM variables
 	g_uPowerupCount++;							// Increment Power up counter
 	
 	CheckCalibrationCable();
-   
-   delay_ms(1000);
-   PrintLn("Number:  ");
-//   delay_ms(20);
-//   OutNum(134);
-//   delay_ms(20);
-//   PrintLn(" : Test Number");
-   delay_ms(1000);   
-//   for(;;);
  
 	for (;;)		// Begin main polling loop
 	{	// Main polling loop runs every 1ms 	
@@ -186,7 +183,6 @@ void main(void)
 			g_uLEDCount = 1;
 			g_uLCDCount = 1;
 		}	
-
 		
 		if ( !(--g_uLEDCount) )
 		{	// Timer for feedback LED
@@ -200,7 +196,7 @@ void main(void)
 				SET_DEVICE_POWER( OFF );	
 
 				g_uLCDCount = 15;
-				RefreshLCD();
+				RefreshLCD(g_uRunFlags & RFLG_DEBUG);
 				if ( g_uRunFlags & RFLG_CALIBRATE_CURRENT )
 					DisplayCalibrationCurrent();
 				else 
@@ -210,13 +206,6 @@ void main(void)
 	}
 }
 
-/*
-   LcdSetCursorPosition( 1, 0 );
-	DisplayString( "uIndex: " );	
-	DisplayDecimal( g_uSetPointIndex );
-	DisplayString( "    " );
-   delay_ms(500);
-*/
 
 ////////////////////////////////////////////////////////////////////////////////
 // FUNCTIONS
@@ -252,7 +241,7 @@ void Initialize(void)
 
 	
 	// Setup Voltage Reference
-	REFCTL0 = REFTCOFF | REFON;// | REFVSEL0;	// V reference on, 1.5V, Temp sensor off   2.5V = REFVSEL1,  2.0V = REFVSEL0, 1.5 = no REFVSEL ?? Why 1.5V reference ??
+	REFCTL0 = REFTCOFF | REFON;// | REFVSEL0;			// V reference on, 1.5V, Temp sensor off   2.5V = REFVSEL1,  2.0V = REFVSEL0, 1.5 = no REFVSEL
 		
 	// Setup ADC 10
 	ADC10CTL0 = ADC10SHT_4 | ADC10MSC | ADC10ON;									// 64 cycle sample and hold time, multiple samples, ADC is On  
@@ -290,6 +279,9 @@ void ResetADC( void )
 	g_uSampleCount = 0;
 	
 	g_uSetPointIndex = 6;
+   
+	g_ulHMaxVoltage = 0;   
+   g_uHMaxVoltageCount = 0;
 }
 
 
@@ -300,13 +292,7 @@ void ExecuteMagnetoTest(void)
 {
 	ADC10CTL0 |= ADC10ENC + ADC10SC;			// Start Sampling and conversion
 	ResetADC();										// Resets all Min Max Counts
-/*
-   LcdSetCursorPosition( 1, 0 );
-	DisplayString( "Magneto1 " );	
-	DisplayDecimal( g_uSetPointIndex );
-	DisplayString( "    " );   
-   delay_ms(1000);
- */	
+	
 	g_ucLivesUsed = CountLivesUsed();						
 	g_ucErrorBlinkCount = g_ucLivesUsed;
 			
@@ -318,13 +304,6 @@ void ExecuteMagnetoTest(void)
 	
 	CalculateCurrent();
 	SetCoagulationPoint();	// Set the coag index and g_uQResistance as optimal R
-/*
-   LcdSetCursorPosition( 1, 0 );
-	DisplayString( "uIndex: " );	
-	DisplayDecimal( g_uSetPointIndex );
-	DisplayString( "    " );
-   delay_ms(2000);
-*/
 
 	if ( g_ucLivesUsed || (g_uSetPointIndex >= 6) 
 		 || ((ROTARY_SWITCH_2C) && (g_uSetPointIndex != 5)) || ((ROTARY_SWITCH_3C) && (g_uSetPointIndex != 2)) )
@@ -345,7 +324,7 @@ void ExecuteMagnetoTest(void)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Calculates current and resistance ??
+// Calculates current and resistance
 // Formula for Current and Resistance:
 //  Vadc = g_AdcVoltage * Vrange * DivGain / 1024:	Gain of divider is 3, Vrange is 1.5V
 //  Iadc = (ADC * Vrange) / (Rshunt * Gain * 1024):  Gain of amp is 100, Rshunt is 2 Ohms, and Vrange is 3.3V, multiply by 1,000,000 for uAmps.
@@ -360,6 +339,8 @@ void CalculateCurrent( void )
 	g_uResistance = ((3L * g_ulMaxVoltage * g_uResGain) / (g_ulMaxCurrent * 10));	// Resistance with a high current pulse and Divider gain of 3
 	g_uQResistance = ((3L * g_ulMaxVoltage * g_uResGain) / ((g_ulMaxCurrent - g_ulMinCurrent) * 10));//  - QUIESCENT_ADC_100UA	
 	g_uMeanResistance =  g_uResistance;
+   
+   g_uHActiveVoltage=((g_ulHMaxVoltage*682) >> 10);									// Voltage in mV ??
 
 	g_uResistance = ((g_uResistance % 10) >= 5) ? (g_uResistance / 10) + 1 : (g_uResistance / 10); // Round resistor value
 	g_uQResistance = ((g_uQResistance % 10) >= 5) ? (g_uQResistance / 10) + 1 : (g_uQResistance / 10); // Round resistor value
@@ -368,7 +349,7 @@ void CalculateCurrent( void )
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//  	Powers up the DUT just long enough to sense the current 
+//  	Powers up the DUT at location ucAddress just long enough to sense the current 
 //  pulses (indicating the lives used) and returns this count.  This function also 
 //  keeps track of the quiescent current as well as the pulse current for determining
 //  the resistance between the power and ground pins of the DUT.
@@ -387,18 +368,18 @@ unsigned char CountLivesUsed()
 
 	// Begin counting blinks until timeout is reached or three blinks are counted
 	while ( uTimeoutCount )		
-	{	// Timeout must be less than 2 seconds to prevent using a life
+	{	// Timout must be less than 2 seconds to prevent using a life
 		uTimeoutCount--;
 		delay_ms(1);			
 
-		if ( !(g_uRunFlags & RFLG_STATE_PULSE_LOW) )	// if (No Low Pulse)
-		{	// Looking for a low pulse - ?? (HIGH?? pulse)
-			if ( g_ADCVoltage > PULSE_ON_VOLTAGE )	
+		if ( !(g_uRunFlags & RFLG_STATE_PULSE_LOW) )
+		{	// Looking for a low pulse
+			if ( g_ADCVoltage > PULSE_ON_VOLTAGE )
 			{
 				if ( uDebounceCount )
 					uDebounceCount--;
 				else
-				{	// low pulse detected and debounced - ?? (HIGH?? pulse)
+				{	// low pulse detected and debounced
 					uDebounceCount = 3;//DEBOUNCE_COUNT;
 					g_uRunFlags |= RFLG_STATE_PULSE_LOW;		
 					if ( ucLastTransition < 15 )
@@ -408,6 +389,11 @@ unsigned char CountLivesUsed()
 					}
 					SET_GREEN_LED( OFF );
 				}
+            if(g_uHMaxVoltageCount<100){
+				   g_ulHMaxVoltage += g_ADCVoltage;
+				   g_uHMaxVoltageCount++;
+            }
+            
 			}
 			else 
 			{  // Legitimate high pulse - so take samples
@@ -441,7 +427,7 @@ unsigned char CountLivesUsed()
 				}
 			}				
 			else 
-			{	// Legitimate low pulse		?? These only count when uTimeoutCount < 100 above, why not here??
+			{	// Legitimate low pulse
 				uDebounceCount = 3;	//DEBOUNCE_COUNT;
 				g_ulMinCurrent += g_ADCCurrent;
 				g_uMinCount++;
@@ -450,16 +436,12 @@ unsigned char CountLivesUsed()
 TOGGLE_GREEN_LED;
 			}
 		}
-		ucLastTransition++;		// ?? Does this mean = (time without a transition) ?? 
+		ucLastTransition++;
 	}
 //	SET_3V_POWER( OFF );	
 	SET_DEVICE_POWER( OFF );						// Turn off device power
 	uPulseCount = (uPulseCount / 2) - 1;		// Subtract first pulse
 	SET_GREEN_LED( OFF );
-   
-//PrintLn("Lives:   ");
-//OutNum(uPulseCount);
-
 	return uPulseCount;
 }
 
@@ -480,8 +462,10 @@ void CheckCalibrationCable(void)
 	if ( g_uMinVoltageCount ) g_ulMinVoltage = g_ulMinVoltage / g_uMinVoltageCount;
 	ADC10CTL0 &= ~ADC10ENC;						// Stop Sampling and conversion	
 	CalculateCurrent();
-	
-	if ( (ucLives == 0xFF) && (g_uIDDQCurrent == 0x00) && (g_uActiveCurrent > 1000) && (g_uActiveCurrent < 4000) )
+
+//   DebugLCD("ACurrent= ",g_uActiveCurrent);
+//   delay_ms(1000);
+	if ( (ucLives == 0xFF) && (g_uIDDQCurrent == 0x00) && (g_uActiveCurrent > 1000) && (g_uActiveCurrent < 8000 ))
 	{
  		g_uRunFlags |= RFLG_CALIBRATE_CURRENT;		
 		g_uCalibrationResistance = 750;
@@ -493,7 +477,7 @@ void CheckCalibrationCable(void)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Calculates the value for g_uResGain to measure precisely set resistor value of 750 ohms.
+// Calculates the value for g_uResGain to measure precisely set resistor value
 //
 // ResGain = (CalResistance * ADC_Current * 10) / (3L * ADC_Voltage)
 //------------------------------------------------------------------------------
@@ -543,7 +527,7 @@ void DisplayCalibrationCurrent(void)
 	CalculateCurrent();
 
 	g_uLCDCount = 5;
-	ClearLcdScreen(); 
+	ClearLcdScreen(g_uRunFlags & RFLG_DEBUG ); 
 	DisplayString( "V " );	
 	DisplayDecimalCurrent( g_uActiveVoltage );
 
@@ -559,7 +543,7 @@ void DisplayCalibrationCurrent(void)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//  Powers up DUT for uSeconds and then powers down.
+//  Powers up DUT at location ucAddress for uSeconds and then powers down.
 //------------------------------------------------------------------------------
 void PulseDevicePower( unsigned short uSeconds )
 {
@@ -586,7 +570,7 @@ void PulseDevicePower( unsigned short uSeconds )
 	SET_DEVICE_POWER( OFF );		// Turn off power
 
 	if ( g_uMinCount )g_ulMinCurrent = g_ulMinCurrent / g_uMinCount;
-	ClearLcdScreen(); 
+	ClearLcdScreen(g_uRunFlags & RFLG_DEBUG ); 
 	DisplayString( "MIN:" );
 	DisplayDecimal(g_uMinSample );
 	DisplayString( " MAX:" );
@@ -825,7 +809,7 @@ void ProcessUARTPacket(void)
 ////////////////////////////////////////////////////////////////////////////////
 //  Controls the main processor LED blink rate
 //------------------------------------------------------------------------------
-void ProcessLED(void)
+void ProcessLED()
 {
 	static unsigned char s_ucBlinkCount;	
 	
@@ -849,9 +833,9 @@ void ProcessLED(void)
 ////////////////////////////////////////////////////////////////////////////////
 //  Controls the LCD Display
 //------------------------------------------------------------------------------
-void ProcessLCD(void)
+void ProcessLCD()
 {
-	ClearLcdScreen(); 
+	ClearLcdScreen(g_uRunFlags & RFLG_DEBUG ); 
 	if ( g_uRunFlags & RFLG_DISPLAY_RESULTS )
 	{
 		if ( g_ucScreen == 0 )
@@ -880,8 +864,10 @@ void ProcessLCD(void)
 			if (  g_uRunFlags & RFLG_CABLE_DETECTED )
 			{
 				g_uRunFlags |= RFLG_PROCESS_START_BUTTON;
-				DisplayString("TESTING...");	
-				delay_ms(750);
+				if ( !( g_uRunFlags & RFLG_DEBUG ) ){
+               DisplayString("TESTING...");	
+   			   delay_ms(750);
+            }
 			}
 			else DisplaySplashScreen();
 		}
@@ -899,8 +885,9 @@ void ProcessLCD(void)
 //------------------------------------------------------------------------------
 void DisplaySplashScreen(void)
 {
-//	ClearLcdScreen(); 
-	DisplayString("   ArthroCare.   ");
+	ClearLcdScreen(g_uRunFlags & RFLG_DEBUG ); 
+	if ( !( g_uRunFlags & RFLG_DEBUG ) )
+     DisplayString("   ArthroCare    ");
 	LcdSetCursorPosition(1, 0);
 	DisplayString("EULS Tester v");			
 	DisplayChar( (FIRMWARE_VERSION + 0x30) );				
@@ -916,12 +903,14 @@ void DisplayInstructions(void)
 {
 	if ( g_uRunFlags & RFLG_CABLE_DETECTED )
 	{
-		DisplayString(" Cable Detected");
+		if ( !( g_uRunFlags & RFLG_DEBUG ) )
+        DisplayString(" Cable Detected");
 		g_uLCDCount = 0x04;
 	}
 	else
 	{
-		DisplayString("  Insert Cable");
+		if ( !( g_uRunFlags & RFLG_DEBUG ) )
+        DisplayString("  Insert Cable");
 		LcdSetCursorPosition(1, 0);
 		DisplayString("  Press  Start");
 	}
@@ -935,7 +924,8 @@ void DisplayTestResults(void)
 {
 	if ( g_ucLivesUsed || (g_uSetPointIndex >= 6) || ((ROTARY_SWITCH_2C) && (g_uSetPointIndex != 5)) || ((ROTARY_SWITCH_3C) && (g_uSetPointIndex != 2)) )
 	{
-		DisplayString( "TEST:  FAIL" );
+		if ( !( g_uRunFlags & RFLG_DEBUG ) )
+        DisplayString( "TEST:  FAIL" );
 		
 		LcdSetCursorPosition( 1, 0);
 		if  ( g_ucLivesUsed && (g_ucLivesUsed < 4) )
@@ -945,10 +935,7 @@ void DisplayTestResults(void)
 		}
 		else if ( g_ucLivesUsed >= 4 )
 		{
-       	DisplayChar( g_ucLivesUsed + 0x30 );				
-			DisplayString( " LIVES USED" );
-
-//			DisplayString( "Invalid Cable." );
+			DisplayString( "Invalid Cable" );
 		}
 		else if ( (g_uSetPointIndex >= 6) )
 		{
@@ -961,7 +948,8 @@ void DisplayTestResults(void)
 	}
 	else
 	{
-		DisplayString( "TEST:  PASS    " );
+		if ( !( g_uRunFlags & RFLG_DEBUG ) )
+        DisplayString( "TEST:  PASS    " );
 		LcdSetCursorPosition( 1, 0);
 		DisplayString( "0 LIVES USED   " );
 	}	
@@ -986,13 +974,11 @@ void SetCoagulationPoint(void)
 	
 	for ( uIndex = 0; uIndex < 6; uIndex++ )
 	{
-		pResistanceLimit = &g_aCoagualationSetPoints[uIndex][1]; // LimitR = MinR
-		if ( (g_uMeanResistance <= *pResistanceLimit++) 
-          && (g_uMeanResistance >= *pResistanceLimit) ) //MeanR <= MaxR && MeanR >= MinR
+		pResistanceLimit = &g_aCoagualationSetPoints[uIndex][1];
+		if ( (g_uMeanResistance >= *pResistanceLimit++) && (g_uMeanResistance <= *pResistanceLimit) )
 			break;
 	}
 	g_uSetPointIndex = uIndex;
-   
 }
 
 
@@ -1001,7 +987,10 @@ void SetCoagulationPoint(void)
 //------------------------------------------------------------------------------
 void DisplaySetPoint(void)
 {
-	DisplayString( "SET POINT: " );
+	if ( !( g_uRunFlags & RFLG_DEBUG ) )
+     DisplayString( "SET POINT: " );
+   else
+     return;
 //	Nominal Resistance (ohms)	Min Resistance (ohms)	Max Resistance (ohms)
 //			{ 	412, 391, 433,			// AP1	
 //				576, 547, 605,			// SP3	
@@ -1066,10 +1055,16 @@ void DisplayResistance(void)
 void DisplayCurrent(void)
 {
 	// Now display digits for Quiescent Current
-	DisplayString( "IDDQ: " );	
-	DisplayDecimalCurrent( g_uIDDQCurrent );
-	DisplayString( " mA    " );
-	
+//xRA	DisplayString( "IDDQ: " );	
+//xRA	DisplayDecimalCurrent( g_uIDDQCurrent );
+//xRA	DisplayString( " mA    " );
+  
+  if ( !( g_uRunFlags & RFLG_DEBUG ) ){
+     DisplayString( "VMax: " );	
+	  DisplayDecimalCurrent( g_uHActiveVoltage ); 
+     DisplayString( " V    " );
+  }
+  
 	// Now display digits for ActiveCurrent
 	LcdSetCursorPosition( 1, 0);
 	DisplayString( "IMax: " );	
@@ -1137,14 +1132,17 @@ void ReadFRAMData(void)
 		g_uFailCount = 0x0000;
 		g_uPowerupCount = 0x0001;
 		g_uErrorCount = 0x0000;
-		g_uResGain = INIT_RES_GAIN;			
+      if(g_uResGain<10000)
+   		g_uResGain = INIT_RES_GAIN;			
 		WriteFRAMData();
 	}
 	
-	ClearLcdScreen(); 
-	LcdSetCursorPosition( 0, 0 );
-	DisplayString( "Pass Count: " );
-	DisplayDecimal( g_uPassCount );
+	ClearLcdScreen(g_uRunFlags & RFLG_DEBUG ); 
+	if ( !( g_uRunFlags & RFLG_DEBUG ) ){
+	  LcdSetCursorPosition( 0, 0 );
+     DisplayString( "Pass Count: " );
+	  DisplayDecimal( g_uPassCount );
+   }
 	LcdSetCursorPosition( 1, 0 );
 	DisplayString( "Fail Count: " );
 	DisplayDecimal( g_uFailCount );

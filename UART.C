@@ -15,7 +15,6 @@
 
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 // STRUCTURE AND TYPE DECLARATIONS
 typedef struct		
@@ -82,80 +81,6 @@ void InitUART(void)
 	UCA1CTL1 &= ~UCSWRST;								// release from reset
 }
 
-////////////////////////////////////////////////////////////////////////////////
-// PrintUART Send string to UART
-void PrintUART( unsigned char* pData)
-{
-  int i;
-  
-  i=0;
-  while(*pData++){
-    i++;
-  }
-
-  TransmitUART(i, pData); 
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// OutNum() Output number (0 to 255) to UART
-void OutNum(char num)
-{
-  unsigned char atmp[5];
-  char i;
-  char tmp;
-
-  i=0;
-  if(num>99){
-    tmp = num/100;
-    atmp[i++]=tmp + 0x30;
-    num = num - tmp*100;
-    atmp[i]=0;
-  }
-  if(num>9){
-    tmp = num/10;
-    atmp[i++]=tmp + 0x30;
-    num = num - tmp*10;
-  }
-  atmp[i++] = num + 0x30;
-  atmp[i++]=0;
-  delTransmitUART(i-1,atmp);
-}
-////////////////////////////////////////////////////////////////////////////////
-//
-void delTransmitUART( unsigned char ucBytes, unsigned char* pData )
-{
-  TransmitUART(ucBytes, pData );
-  delay_ms(20);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// PrintLn()
-void PrintLn(unsigned char* pData)
-{
-  int i;
-  
-  i = 0;
-  while (*pData++){
-    i++;
-  }
-  *pData++ = 13;  // carriage return
-  *pData++ = 10;  // Line Feed
-  *pData = 0;
-  delTransmitUART(i+2, pData);   
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Print()
-void Print(unsigned char* pData)
-{
-  int i;
-  
-  i = 0;
-  while (*pData++){
-    i++;
-  }
-  delTransmitUART(i, pData);   
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 //------------------------------------------------------------------------------
