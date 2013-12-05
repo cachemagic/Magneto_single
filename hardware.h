@@ -119,7 +119,7 @@ extern unsigned long g_ulSampleSum;
 extern unsigned short g_uSampleCount;
 extern unsigned short g_ADCVoltage;
  #define POWER_ON_VOLTAGE					0x03B0	//  If below this value then cable is turned on
- #define PULSE_ON_VOLTAGE					0x0240  //  0x0300	//  If below this value then Fet is on.
+ #define PULSE_ON_VOLTAGE					0x02B8   //  0x0300	//  If below this value then Fet is on.
  #define SHORT_CIRCUIT_VOLTAGE			0x0008	//  The Current Amplifier will saturate if a shorted cable is inserted 	
 
 extern unsigned short g_ADCCurrent;

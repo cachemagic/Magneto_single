@@ -35,7 +35,7 @@
 
 #define FIXTURE_TYPE			0x21		// Magneto Fixture
 #define FIRMWARE_VERSION	0x02		// Version 2 by Russell Anderson
-#define FIRMWARE_REV			0x02
+#define FIRMWARE_REV			0x04
 
 ////////////////////////////////////////////////////////////////////////////////
 //  GLOBAL VARIABLES AND DEFINES
@@ -184,7 +184,7 @@ void main(void)
 			g_uLCDCount = 1;
 		}	
 		
-		if ( !(--g_uLEDCount) )
+		if ( !(--g_uLEDCount) ) // Old code to blink LED -- not needed (?)
 		{	// Timer for feedback LED
 			g_uLEDCount = TIMEOUT1_COUNT_150MS;
 			ProcessLED();
@@ -589,7 +589,7 @@ void PulseDevicePower( unsigned short uSeconds )
 //------------------------------------------------------------------------------
 void CheckButtons(void)
 {
-	static unsigned char s_uDebounceCount = DEBOUNCE_COUNT;
+	static unsigned char s_uDebounceCount = DEBOUNCE_COUNT; // Normally 3
 	
 	if ( START_BUTTON_PRESSED && !(g_uRunFlags & RFLG_START_BUTTON_PRESSED) )	// POLL BUTTON PRESSES
 	{
@@ -631,6 +631,7 @@ void CheckButtons(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 //  Reads the current delivered through the 9V supply 
+// Called once each milliseconds from Main loop
 //------------------------------------------------------------------------------
 void DetectCable(void)
 {	
@@ -639,33 +640,33 @@ void DetectCable(void)
 
 	if ( !(--s_uToggleCount) )
 	{
-		s_uToggleCount = 150;
+		s_uToggleCount = 150;               // Wait 150 mS before next measurement
 		
 		// Toggle power to lemo for cable detect
-		if ( g_uRunFlags & RFLG_LEMO_POWER ) 
+		if ( g_uRunFlags & RFLG_LEMO_POWER ) // If power is already on--
 		{ // Toggle power off and see if we had no current on last pulse
 			ADC10CTL0 &= ~ADC10ENC;						// Stop Sampling and conversion	
-			g_uRunFlags &= ~RFLG_LEMO_POWER;
-			SET_DEVICE_POWER( OFF );	
+			g_uRunFlags &= ~RFLG_LEMO_POWER;       // Indicate that power is off
+			SET_DEVICE_POWER( OFF );	            // Turn off power
 			
-			if ( g_uRunFlags & RFLG_CABLE_DETECTED  )
+			if ( g_uRunFlags & RFLG_CABLE_DETECTED ) // If Cable had been detected 
 			{	// Cable was removed
-				if ( s_uHighCurrentCount < 10 )
+				if ( s_uHighCurrentCount < 10 )       // But not long enough(?)
 				{
-					g_uRunFlags &= ~RFLG_CABLE_DETECTED;
-					if ( !(g_uRunFlags & RFLG_BUTTON_INITIATED) )
+					g_uRunFlags &= ~RFLG_CABLE_DETECTED; // Turn off Detected Flag
+					if ( !(g_uRunFlags & RFLG_BUTTON_INITIATED) ) //If no Button Press
 					{
-						g_uRunFlags &= ~RFLG_DISPLAY_RESULTS;
-						SET_RED_LED( OFF );
+						g_uRunFlags &= ~RFLG_DISPLAY_RESULTS;  // Turn off Display Results
+						SET_RED_LED( OFF );                    // And turn off LEDs
 						SET_GREEN_LED( OFF );
 						g_ucScreen = 0;
 						g_uLCDCount = 1;
 						g_uLEDCount = 1;
 					}
 				}
-				else
+				else  //We did have a current pulse
 				{
-					s_uToggleCount = 1000;
+					s_uToggleCount = 1000;        // 1 s delay before next detection
 				}
 			}
 		}
@@ -680,11 +681,12 @@ void DetectCable(void)
 			
 	if ( g_uRunFlags & RFLG_LEMO_POWER ) // Check for current only if power is on
 	{
-		if ( g_ADCCurrent > PULSE_ON_CURRENT ) 
+		if ( g_ADCCurrent > PULSE_ON_CURRENT ) // Then FET is on
 		{
 			s_uHighCurrentCount++;
 		}
 			
+      // cable not detected and HighCurrentCount>10 then set CABLE_DETECTED
 		if ( !(g_uRunFlags & RFLG_CABLE_DETECTED) && (s_uHighCurrentCount > 10) )
 		{	// Cable is now detected
 			s_uHighCurrentCount = 0;
