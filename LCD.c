@@ -178,8 +178,9 @@ void ClearLcdScreen(unsigned char debug)
   }
   else{
     return;
-    LcdSetCursorPosition( 1, 0 );
-    DisplayString("                ");
+// Which makes the next statements unreachable. They didn't achieve objective.    
+//    LcdSetCursorPosition( 1, 0 );
+//    DisplayString("                ");
   }
 
   

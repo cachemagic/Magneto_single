@@ -35,7 +35,7 @@
 
 #define FIXTURE_TYPE			0x21		// Magneto Fixture
 #define FIRMWARE_VERSION	0x02		// Version 2 by Russell Anderson
-#define FIRMWARE_REV			0x01
+#define FIRMWARE_REV			0x02
 
 ////////////////////////////////////////////////////////////////////////////////
 //  GLOBAL VARIABLES AND DEFINES
@@ -440,6 +440,8 @@ TOGGLE_GREEN_LED;
 	}
 //	SET_3V_POWER( OFF );	
 	SET_DEVICE_POWER( OFF );						// Turn off device power
+//DebugLCD("uPulseCnt= ",uPulseCount);
+//delay_ms(1000);
 	uPulseCount = (uPulseCount / 2) - 1;		// Subtract first pulse
 	SET_GREEN_LED( OFF );
 	return uPulseCount;
@@ -465,7 +467,7 @@ void CheckCalibrationCable(void)
 
 //   DebugLCD("ACurrent= ",g_uActiveCurrent);
 //   delay_ms(1000);
-	if ( (ucLives == 0xFF) && (g_uIDDQCurrent == 0x00) && (g_uActiveCurrent > 1000) && (g_uActiveCurrent < 8000 ))
+	if ( (ucLives == 0xFF) && (g_uIDDQCurrent == 0x00) && (g_uActiveCurrent > 1000) )
 	{
  		g_uRunFlags |= RFLG_CALIBRATE_CURRENT;		
 		g_uCalibrationResistance = 750;
@@ -978,6 +980,8 @@ void SetCoagulationPoint(void)
 		if ( (g_uMeanResistance >= *pResistanceLimit++) && (g_uMeanResistance <= *pResistanceLimit) )
 			break;
 	}
+// DebugLCD("Resistance= ",g_uMeanResistance);
+// delay_ms(1000);
 	g_uSetPointIndex = uIndex;
 }
 
