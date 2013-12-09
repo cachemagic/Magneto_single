@@ -50,5 +50,6 @@ void DisplayDecimal(unsigned short uNumber);
 void DisplayHex(unsigned short uNumber);
 void RefreshLCD(unsigned char); 
 void DebugLCD(char *Text, unsigned short uNumber);
+void DebugDelayClearLCD(void);
 
 #endif /* LCD_H_ */

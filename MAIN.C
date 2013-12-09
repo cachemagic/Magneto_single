@@ -35,7 +35,7 @@
 
 #define FIXTURE_TYPE			0x21		// Magneto Fixture
 #define FIRMWARE_VERSION	0x02		// Version 2 by Russell Anderson
-#define FIRMWARE_REV			0x04
+#define FIRMWARE_REV			0x05
 
 ////////////////////////////////////////////////////////////////////////////////
 //  GLOBAL VARIABLES AND DEFINES
@@ -441,7 +441,7 @@ TOGGLE_GREEN_LED;
 //	SET_3V_POWER( OFF );	
 	SET_DEVICE_POWER( OFF );						// Turn off device power
 //DebugLCD("uPulseCnt= ",uPulseCount);
-//delay_ms(1000);
+//DebugDelayClearLCD();
 	uPulseCount = (uPulseCount / 2) - 1;		// Subtract first pulse
 	SET_GREEN_LED( OFF );
 	return uPulseCount;
@@ -465,9 +465,13 @@ void CheckCalibrationCable(void)
 	ADC10CTL0 &= ~ADC10ENC;						// Stop Sampling and conversion	
 	CalculateCurrent();
 
-//   DebugLCD("ACurrent= ",g_uActiveCurrent);
-//   delay_ms(1000);
-	if ( (ucLives == 0xFF) && (g_uIDDQCurrent == 0x00) && (g_uActiveCurrent > 1000) )
+//   DebugLCD("ActiveCurr= ",g_uActiveCurrent);
+//   DebugDelayClearLCD();
+//   DebugLCD("IDDQCurr= ",g_uIDDQCurrent);
+//   DebugDelayClearLCD();
+//   DebugLCD("Lives= ",ucLives); 
+//   DebugDelayClearLCD();
+	if ( (ucLives == 0xFF) && (g_uIDDQCurrent == 0x00) && (g_uActiveCurrent > 700) )
 	{
  		g_uRunFlags |= RFLG_CALIBRATE_CURRENT;		
 		g_uCalibrationResistance = 750;

@@ -7,19 +7,19 @@
     <name>Debug</name>
     <outputs>
       <file>$PROJ_DIR$\HARDWARE.C</file>
-      <file>$PROJ_DIR$\Debug\Obj\MAIN.pbi</file>
+      <file>$TOOLKIT_DIR$\inc\msp430fr5739.h</file>
       <file>$PROJ_DIR$\LCD.c</file>
       <file>$PROJ_DIR$\Debug\Obj\HARDWARE.pbi</file>
       <file>$PROJ_DIR$\MAIN.C</file>
       <file>$PROJ_DIR$\UART.C</file>
-      <file>$PROJ_DIR$\Debug\Obj\MAIN.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\MAIN.pbi</file>
       <file>$PROJ_DIR$\uart.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\LCD.r43</file>
-      <file>$TOOLKIT_DIR$\inc\msp430fr5739.h</file>
-      <file>$TOOLKIT_DIR$\lib\dlib\dl430xsfn.r43</file>
       <file>$PROJ_DIR$\hardware.h</file>
-      <file>$PROJ_DIR$\Debug\Obj\Magneto_Main.pbd</file>
+      <file>$TOOLKIT_DIR$\lib\dlib\dl430xsfn.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\LCD.r43</file>
       <file>$PROJ_DIR$\Debug\Obj\UART.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\MAIN.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\Magneto_Main.pbd</file>
       <file>$PROJ_DIR$\Debug\Exe\Magneto_Main.d43</file>
       <file>$TOOLKIT_DIR$\inc\intrinsics.h</file>
       <file>$PROJ_DIR$\Debug\Obj\LCD.pbi</file>
@@ -55,11 +55,11 @@
       <inputs>
         <tool>
           <name>ICC430</name>
-          <file> 11 9 21 15</file>
+          <file> 8 1 21 15</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 11 9 21 15</file>
+          <file> 8 1 21 15</file>
         </tool>
       </inputs>
     </file>
@@ -68,7 +68,7 @@
       <outputs>
         <tool>
           <name>ICC430</name>
-          <file> 8</file>
+          <file> 10</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -78,11 +78,11 @@
       <inputs>
         <tool>
           <name>ICC430</name>
-          <file> 23 11 9 21 15</file>
+          <file> 23 8 1 21 15</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 23 11 9 21 15</file>
+          <file> 23 8 1 21 15</file>
         </tool>
       </inputs>
     </file>
@@ -91,21 +91,21 @@
       <outputs>
         <tool>
           <name>ICC430</name>
-          <file> 6</file>
+          <file> 12</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 1</file>
+          <file> 6</file>
         </tool>
       </outputs>
       <inputs>
         <tool>
           <name>ICC430</name>
-          <file> 11 9 21 15 7 23</file>
+          <file> 8 1 21 15 7 23</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 11 9 21 15 7 23</file>
+          <file> 8 1 21 15 7 23</file>
         </tool>
       </inputs>
     </file>
@@ -114,7 +114,7 @@
       <outputs>
         <tool>
           <name>ICC430</name>
-          <file> 13</file>
+          <file> 11</file>
         </tool>
         <tool>
           <name>BICOMP</name>
@@ -124,11 +124,11 @@
       <inputs>
         <tool>
           <name>ICC430</name>
-          <file> 11 9 21 15 7</file>
+          <file> 8 1 21 15 7</file>
         </tool>
         <tool>
           <name>BICOMP</name>
-          <file> 11 9 21 15 7</file>
+          <file> 8 1 21 15 7</file>
         </tool>
       </inputs>
     </file>
@@ -137,7 +137,7 @@
       <inputs>
         <tool>
           <name>BILINK</name>
-          <file> 3 16 1 19</file>
+          <file> 3 16 6 19</file>
         </tool>
       </inputs>
     </file>
@@ -152,7 +152,7 @@
       <inputs>
         <tool>
           <name>XLINK</name>
-          <file> 20 22 17 8 6 13 10</file>
+          <file> 20 22 17 10 12 11 9</file>
         </tool>
       </inputs>
     </file>
@@ -161,7 +161,7 @@
       <inputs>
         <tool>
           <name>XLINK</name>
-          <file> 20 22 17 8 6 13 10</file>
+          <file> 20 22 17 10 12 11 9</file>
         </tool>
       </inputs>
     </file>

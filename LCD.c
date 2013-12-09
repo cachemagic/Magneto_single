@@ -383,7 +383,12 @@ void DebugLCD(char *Text, unsigned short uNumber)
   DisplayDecimal(uNumber);
 }
 
-
+void DebugDelayClearLCD(void)
+{
+  delay_ms(1000);
+  LcdSetCursorPosition( 0, 0 );
+  DisplayString("                ");
+}
 
 
 
