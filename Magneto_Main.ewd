@@ -12,7 +12,7 @@
       <name>C-SPY</name>
       <archiveVersion>4</archiveVersion>
       <data>
-        <version>25</version>
+        <version>26</version>
         <wantNonLocal>1</wantNonLocal>
         <debug>1</debug>
         <option>
@@ -139,13 +139,17 @@
           <name>OCImagesUse3</name>
           <state>0</state>
         </option>
+        <option>
+          <name>ENERGYTRACE</name>
+          <state>1</state>
+        </option>
       </data>
     </settings>
     <settings>
       <name>430FET</name>
       <archiveVersion>1</archiveVersion>
       <data>
-        <version>23</version>
+        <version>25</version>
         <wantNonLocal>1</wantNonLocal>
         <debug>1</debug>
         <option>
@@ -282,6 +286,14 @@
           <name>Retain</name>
           <state>0</state>
         </option>
+        <option>
+          <name>jstatebit</name>
+          <state>0</state>
+        </option>
+        <option>
+          <name>RadioJtagSpeedType</name>
+          <state>1</state>
+        </option>
       </data>
     </settings>
     <settings>
@@ -347,6 +359,10 @@
         <loadFlag>0</loadFlag>
       </plugin>
       <plugin>
+        <file>$TOOLKIT_DIR$\plugins\rtos\TI-RTOS\tirtosplugin.ewplugin</file>
+        <loadFlag>0</loadFlag>
+      </plugin>
+      <plugin>
         <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-II\uCOS-II-286-KA-CSpy.ewplugin</file>
         <loadFlag>0</loadFlag>
       </plugin>
@@ -366,6 +382,10 @@
         <file>$EW_DIR$\common\plugins\SymList\SymList.ENU.ewplugin</file>
         <loadFlag>1</loadFlag>
       </plugin>
+      <plugin>
+        <file>$EW_DIR$\common\plugins\uCProbe\uCProbePlugin.ENU.ewplugin</file>
+        <loadFlag>0</loadFlag>
+      </plugin>
     </debuggerPlugins>
   </configuration>
   <configuration>
@@ -378,7 +398,7 @@
       <name>C-SPY</name>
       <archiveVersion>4</archiveVersion>
       <data>
-        <version>25</version>
+        <version>26</version>
         <wantNonLocal>1</wantNonLocal>
         <debug>0</debug>
         <option>
@@ -505,13 +525,17 @@
           <name>OCImagesUse3</name>
           <state>0</state>
         </option>
+        <option>
+          <name>ENERGYTRACE</name>
+          <state>1</state>
+        </option>
       </data>
     </settings>
     <settings>
       <name>430FET</name>
       <archiveVersion>1</archiveVersion>
       <data>
-        <version>23</version>
+        <version>25</version>
         <wantNonLocal>1</wantNonLocal>
         <debug>0</debug>
         <option>
@@ -648,6 +672,14 @@
           <name>Retain</name>
           <state>0</state>
         </option>
+        <option>
+          <name>jstatebit</name>
+          <state>0</state>
+        </option>
+        <option>
+          <name>RadioJtagSpeedType</name>
+          <state>1</state>
+        </option>
       </data>
     </settings>
     <settings>
@@ -713,6 +745,10 @@
         <loadFlag>0</loadFlag>
       </plugin>
       <plugin>
+        <file>$TOOLKIT_DIR$\plugins\rtos\TI-RTOS\tirtosplugin.ewplugin</file>
+        <loadFlag>0</loadFlag>
+      </plugin>
+      <plugin>
         <file>$TOOLKIT_DIR$\plugins\rtos\uCOS-II\uCOS-II-286-KA-CSpy.ewplugin</file>
         <loadFlag>0</loadFlag>
       </plugin>
@@ -731,6 +767,10 @@
       <plugin>
         <file>$EW_DIR$\common\plugins\SymList\SymList.ENU.ewplugin</file>
         <loadFlag>1</loadFlag>
+      </plugin>
+      <plugin>
+        <file>$EW_DIR$\common\plugins\uCProbe\uCProbePlugin.ENU.ewplugin</file>
+        <loadFlag>0</loadFlag>
       </plugin>
     </debuggerPlugins>
   </configuration>
